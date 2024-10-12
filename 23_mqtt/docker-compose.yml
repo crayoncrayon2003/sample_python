@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  broker:
+    image: eclipse-mosquitto
+    container_name: 'broker'
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    ports:
+      - 8000:1883
+      - 9001:9001
