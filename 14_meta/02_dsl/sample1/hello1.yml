@@ -1,0 +1,5 @@
+func: print
+args:
+    # argsは配列として記述
+    - Hello, World!
+    - Goodbye!
