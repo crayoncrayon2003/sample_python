@@ -66,8 +66,9 @@ def get_user(user: User):
     if hasattr(user, 'id'):
         # del user id
         delattr(user, 'id')
-    ret = CO.insert_one(user.dict(by_alias=True))
-    user.id = ret.inserted_id
+
+    CO.insert_one(user.dict(by_alias=True))
+
     return {'users': user}
 
 # del user
