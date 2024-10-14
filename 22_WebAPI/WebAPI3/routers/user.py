@@ -22,7 +22,7 @@ class PyObjectId(ObjectId):
     def __get_pydantic_json_schema__(cls, schema: dict) -> None:
         schema.update({"type": "string"})
 
-class User(BaseModel):
+class UserModel(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias='_id')
     name: str
     age : int
@@ -61,13 +61,13 @@ def get_users():
 
 # add user
 @router.post('/users')
-def get_user(user: User):
+def get_user(user: UserModel):
     # Check id
     if hasattr(user, 'id'):
         # del user id
         delattr(user, 'id')
 
-    CO.insert_one(user.dict(by_alias=True))
+    CO.insert_one(user.model_dump(by_alias=True))
 
     return {'users': user}
 
@@ -78,5 +78,5 @@ def delete_user(index: str):
 
     users = []
     for user in CO.find():
-        users.append(User(**user))
+        users.append(UserModel(**user))
     return {'users': users}

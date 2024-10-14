@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter
 import controllers.user as ctrl
-from model.user import User
+from model.user import UserModel
 
 router = APIRouter()
 
@@ -12,7 +12,7 @@ def get_users():
 
 # POSTの処理 １ユーザ追加
 @router.post('/users')
-def set_user(user: User):
+def set_user(user: UserModel):
     return {'users': ctrl.set_user(user)}
 
 # PUTの処理 キー：userの値を削除

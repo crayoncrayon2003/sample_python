@@ -17,7 +17,7 @@ class PyObjectId(ObjectId):
     def __get_pydantic_json_schema__(cls, schema: dict) -> None:
         schema.update({"type": "string"})
 
-class User(BaseModel):
+class UserModel(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias='_id')
     name: str
     age : int

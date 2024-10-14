@@ -1,5 +1,5 @@
 from db.user import CO
-from model.user import User
+from model.user import UserModel
 from bson import ObjectId
 import json
 
@@ -18,13 +18,13 @@ def get_user():
     return users
 
 # set user
-def set_user(user: User):
+def set_user(user: UserModel):
     # Check id
     if hasattr(user, 'id'):
         # del user id
         delattr(user, 'id')
 
-    CO.insert_one(user.dict(by_alias=True))
+    CO.insert_one(user.model_dump(by_alias=True))
 
     return get_user()
 
