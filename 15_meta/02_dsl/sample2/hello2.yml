@@ -1,0 +1,13 @@
+# Support for multiple functions
+- func: set
+  args:
+    # 1st param is variable
+    - your_name
+    # 2nd param is args
+    - MyName
+- func: print
+  args:
+    - Hello, World!
+    # セット済みの変数を引数に含める
+    - your_name
+    - Goodbye!

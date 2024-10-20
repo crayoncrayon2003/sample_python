@@ -3,7 +3,7 @@ def func(self, *args):
 
 def main():
     for kind in ['Bowwow', 'Meow']:
-        # クラス「Animal」　クラス自体を動的に作る
+        # dynamically create Animal class at runtime.
         Animal = type(
             'animal',
             (),
@@ -13,9 +13,9 @@ def main():
             }
         )
 
-        # クラス「AnimalClass」のインスタンスを作る
+        # create AnimalC instance
         temp = Animal()
-        # クラス「AnimalClass」のsoundsメソッド実行
+        # 1st Bowwow, 2nd Meow
         temp.sounds()
 
 if __name__ == "__main__":
