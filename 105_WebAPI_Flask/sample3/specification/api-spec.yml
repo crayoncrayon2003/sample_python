@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: exsample
+  description: this is exsample
+  version: 1.0.0
+servers:
+- url: //localhost:8080/
+paths:
+  /hello:
+    get:
+      tags:
+      - hello
+      summary: hello
+      description: this is hello api
+      operationId: controller.hello.getHello
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: hello
+
+  /data-api:
+    get:
+      tags:
+      - data-api
+      summary: data-api get
+      description: this is data refarence api
+      operationId: dataapi.getData
+      parameters:
+      - name: id
+        in: query
+        description: Include the ID in the query parameter
+        schema:
+          type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefarenceData'
+
+    post:
+      tags:
+      - data-api
+      summary: data-api post
+      description: this is create data api
+      operationId: dataapi.postData
+      parameters:
+      - name: Content-Type
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateData'
+        required: true
+      responses:
+        200:
+          description: OK
+          content: {}
+        500:
+          description: NG
+          content: {}
+
+components:
+  schemas:
+    RefarenceData:
+      title: Refarence data request
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: number
+          description: ""
+          example: 21.7
+      example:
+        id: 1234
+        value: 21.7
+    CreateData:
+      title: Create data request
+      required:
+      - value
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ""
+          example: 1234
+        value:
+          type: number
+          description: ""
+          example: 21.7
+      example:
+        id: 1234
+        value: 21.7
