@@ -12,7 +12,7 @@ paths:
       - hello
       summary: hello
       description: this is hello api
-      operationId: reporter.getHello
+      operationId: controller.getHello
       responses:
         200:
           description: OK
@@ -28,7 +28,7 @@ paths:
       - data-api
       summary: data-api get
       description: this is data refarence api
-      operationId: reporter.getData
+      operationId: controller.getData
       parameters:
       - name: id
         in: query
@@ -48,7 +48,7 @@ paths:
       - data-api
       summary: data-api post
       description: this is create data api
-      operationId: reporter.postData
+      operationId: controller.postData
       parameters:
       - name: Content-Type
         in: header
