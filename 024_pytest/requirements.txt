@@ -1,0 +1,11 @@
+## test package ##
+pytest        # Core pytest framework
+pytest-xdist  # Supports parallel test execution
+pytest-mock   # Simplifies the use of mock objects in tests
+pytest-flake8 # Checks code style and quality to improve code standards
+pytest-html   # Outputs test results as HTML reports
+pytest-cov    # measuring test coverage
+lizard        # Code complexity analysis tool
+
+## sut package ##
+requests
