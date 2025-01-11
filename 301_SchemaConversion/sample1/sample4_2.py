@@ -22,16 +22,14 @@ APP = Flask(__name__)
 # Atlas client
 ATLAS_CLIENT = AtlasClient("http://localhost:21000", ("admin", "admin"))
 
-# Apache Atlas client settings
-def atlas_type_to_spark_type(atlas_type):
-    mapping = {
-        "string": StringType(),
-        "int": IntegerType(),
-        "integer": IntegerType(),
+def spark_type_to_atlas_type(spark_type):
+    """Convert Spark DataType to Atlas-compatible string type."""
+    type_mapping = {
+        "StringType": "string",
+        "IntegerType": "int",
     }
-    return mapping.get(atlas_type.lower(), StringType())
+    return type_mapping.get(type(spark_type).__name__, "string")
 
-# convert data type to PySpark from Atlas
 def atlas_type_to_spark_type(atlas_type):
     type_mapping = {
         "string": StringType(),
@@ -40,11 +38,11 @@ def atlas_type_to_spark_type(atlas_type):
     return type_mapping.get(atlas_type.lower(), StringType())
 
 # Load schema from Atlas
-def get_entities_from_atlas(atlas_client: AtlasClient, schema_name, table_qualified_name):
+def get_entities_from_atlas(atlas_client, schema_name, table_qualified_name):
     try:
-        # get table info
+        # Get table info
         table_entity = atlas_client.entity.get_entity_by_attribute(
-            type_name="hive_table",
+            type_name="spark_table",
             uniq_attributes={"qualifiedName": table_qualified_name}
         )
         table_attributes = table_entity["entity"]["attributes"]
@@ -53,21 +51,21 @@ def get_entities_from_atlas(atlas_client: AtlasClient, schema_name, table_qualif
             print(f"Schema name mismatch. Expected: {schema_name}, Found: {table_attributes.get('name')}")
             return None
 
-        # get columns info
-        column_guids = [col["guid"] for col in table_attributes.get("columns", [])]
+        # Get columns info
+        column_guids = table_entity.referredEntities
         struct_fields = []
 
-        # get detail
+        # Get details for column entities
         for column_guid in column_guids:
             column_entity = atlas_client.entity.get_entity_by_guid(column_guid)
-            column_name = column_entity["entity"]["attributes"]["name"]
-            column_type = column_entity["entity"]["attributes"].get("type", "string")
-            spark_type = atlas_type_to_spark_type(column_type)
-            struct_fields.append(StructField(column_name, spark_type, True))
+            column_name = column_entity["entity"]["attributes"].get("name", "string")
+            column_type = column_entity["entity"]["attributes"].get("type", "StringType")
+            spark_type_class = globals().get(column_type, StringType)
+            # spark_type_class=atlas_type_to_spark_type(column_type)
+            struct_fields.append(StructField(column_name, spark_type_class(), True))
 
-        # create schema
+        # Create schema
         return StructType(struct_fields)
-
     except Exception as e:
         print(f"Failed to retrieve schema for '{schema_name}' (table: '{table_qualified_name}'):", e)
         raise

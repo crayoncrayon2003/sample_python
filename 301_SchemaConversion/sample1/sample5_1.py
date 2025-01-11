@@ -1,128 +1,131 @@
 from apache_atlas.client.base_client import AtlasClient
 from apache_atlas.model.instance import AtlasEntity, AtlasEntitiesWithExtInfo
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from apache_atlas.model.typedef import AtlasTypesDef
+from apache_atlas.utils           import type_coerce
 
-def create_schema_entities_in_atlas(atlas_client, schema_name, schema_fields, table_qualified_name):
-    # Provisional GUIDs for table and columns
-    table_guid = f"-{hash(schema_name) % 10000}"
-    column_guids = [f"-{hash(field['name']) % 10000}" for field in schema_fields]
 
-    # Define table entity
-    table_entity = AtlasEntity()
-    table_entity.guid = table_guid
-    table_entity.typeName = "hive_table"
-    table_entity.attributes = {
+def create_schema_entities_in_atlas(atlas_client, schema_name, schema_fields, schema_qualified_name):
+    schema_guid = f"-{abs(hash(schema_name) % 10000)}"
+    field_guids = [f"-{abs(hash(field['name']) % 10000)}" for field in schema_fields]
+
+    # Define schema entity
+    schema_entity = AtlasEntity()
+    schema_entity.guid = schema_guid
+    schema_entity.typeName = "avro_schema"
+    schema_entity.attributes = {
         "name": schema_name,
-        "qualifiedName": table_qualified_name,
+        "qualifiedName": schema_qualified_name,
         "owner": "admin",
-        "description": f"Schema for table {schema_name}",
+        "description": f"Avro schema for {schema_name}",
+        "type": "avro_record",
+        "namespace": schema_name,
+        "fields": [],
     }
 
-    # Define column entities
-    column_entities = []
-    for guid, field in zip(column_guids, schema_fields):
-        column_entity = AtlasEntity()
-        column_entity.guid = guid
-        column_entity.typeName = "hive_column"
-        column_entity.attributes = {
+    # Define field entities
+    field_entities = []
+    for guid, field in zip(field_guids, schema_fields):
+        field_entity = AtlasEntity()
+        field_entity.guid = guid
+        field_entity.typeName = "avro_field"
+        field_entity.attributes = {
             "name": field["name"],
-            "qualifiedName": f"{table_qualified_name}.{field['name']}",
-            "type": field["type"],
+            # "type": field["type"],
+            "qualifiedName": f"{schema_qualified_name}.{field['name']}",
             "owner": "admin",
-            "table": {"guid": table_guid}
+            "table": {"guid": schema_guid},
         }
-        column_entities.append(column_entity)
+        field_entities.append(field_entity)
+        schema_entity.attributes["fields"].append({"guid": field_entity.guid})
 
-    # Combine entities
+    # Combine schema and field entities
     entities_with_ext_info = AtlasEntitiesWithExtInfo()
-    entities_with_ext_info.entities = [table_entity] + column_entities
+    entities_with_ext_info.entities = [schema_entity] + field_entities
+
+    # Debug: Print payload
+    print("Payload sent to Atlas:", entities_with_ext_info)
 
     # Send to Atlas
     try:
         response = atlas_client.entity.create_entities(entities_with_ext_info)
         print(f"Entities for {schema_name} successfully created in Apache Atlas.")
-        # print("Response:", response)
     except Exception as e:
-        print(f"Failed to create entities for {schema_name}:", e)
+        print(f"Failed to create entities for {schema_name}: {e}")
         raise
 
 
-def atlas_type_to_spark_type(atlas_type):
-    type_mapping = {
-        "string": StringType(),
-        "int": IntegerType(),
-    }
-    return type_mapping.get(atlas_type.lower(), StringType())
-
-def get_entities_from_atlas(atlas_client: AtlasClient, schema_name, table_qualified_name):
+# Load schema from Atlas
+def get_schema_from_atlas(atlas_client, schema_name, schema_qualified_name):
     try:
-        # get table info
-        table_entity = atlas_client.entity.get_entity_by_attribute(
-            type_name="hive_table",
-            uniq_attributes={"qualifiedName": table_qualified_name}
+        # Retrieve the schema entity by qualifiedName
+        schema_entity = atlas_client.entity.get_entity_by_attribute(
+            type_name="avro_schema",
+            uniq_attributes={"qualifiedName": schema_qualified_name}
         )
-        table_attributes = table_entity["entity"]["attributes"]
 
-        if table_attributes.get("name") != schema_name:
-            print(f"Schema name mismatch. Expected: {schema_name}, Found: {table_attributes.get('name')}")
+        # Validate schema name
+        schema_attributes = schema_entity["entity"]["attributes"]
+        if schema_attributes["name"] != schema_name:
+            print(f"Schema name mismatch. Expected: {schema_name}, Found: {schema_attributes['name']}")
             return None
 
-        # get columns info
-        column_guids = [col["guid"] for col in table_attributes.get("columns", [])]
-        struct_fields = []
+        # Retrieve field GUIDs from the schema
+        field_guids = [field_ref["guid"] for field_ref in schema_attributes.get("fields", [])]
 
-        # get detail
-        for column_guid in column_guids:
-            column_entity = atlas_client.entity.get_entity_by_guid(column_guid)
-            column_name = column_entity["entity"]["attributes"]["name"]
-            column_type = column_entity["entity"]["attributes"].get("type", "string")
-            spark_type = atlas_type_to_spark_type(column_type)
-            struct_fields.append(StructField(column_name, spark_type, True))
+        # Fetch field details
+        schema_fields = []
+        for field_guid in field_guids:
+            field_entity = atlas_client.entity.get_entity_by_guid(field_guid)
+            field_attributes = field_entity["entity"]["attributes"]
+            schema_fields.append({"name": field_attributes["name"], "type": field_attributes["type"]})
 
-        # create schema
-        return StructType(struct_fields)
+        return schema_fields
 
     except Exception as e:
-        print(f"Failed to retrieve schema for '{schema_name}' (table: '{table_qualified_name}'):", e)
+        print(f"Failed to retrieve schema '{schema_name}' (qualifiedName: '{schema_qualified_name}'): {e}")
         raise
 
-
-# show schema
+# Show schema
 def show_schema(schema, name):
-    print(f"Schema of {name}:")
-    for field in schema.fields:
-        print(f" - {field.name}: {field.dataType}")
+    print(f"name : {name}:")
+    print(f"type : {type(schema)}")
+    for field in schema:
+        print(f" - {field['name']}: {field['type']}")
 
 def main():
     # Define Atlas client
     atlas_client = AtlasClient("http://localhost:21000", ("admin", "admin"))
 
-   # Define schemas
-    schema_source = StructType([
-        StructField("Name", StringType(), True),
-        StructField("Age", IntegerType(), True)
-    ])
-    schema_target = StructType([
-        StructField("Name", StringType(), True),
-        StructField("Age", StringType(), True)
-    ])
+    # Define schemas directly as dictionaries
+    schema_source = [
+        {"name": "Name", "type": "string"},
+        {"name": "Age", "type": "int"},
+    ]
+    schema_target = [
+        {"name": "Name", "type": "string"},
+        {"name": "Age", "type": "string"},
+    ]
+    print("--------- post schema ---------")
+    # Sort in alphabetical order
+    schema_source = sorted(schema_source, key=lambda x: x["name"])
+    schema_target = sorted(schema_target, key=lambda x: x["name"])
     show_schema(schema_source, "schema_source")
     show_schema(schema_target, "schema_target")
 
-    # Define Atlas schema fields
-    source_fields = [{"name": field.name, "type": field.dataType.simpleString()} for field in schema_source.fields]
-    target_fields = [{"name": field.name, "type": field.dataType.simpleString()} for field in schema_target.fields]
-
     # Register schemas in Apache Atlas
-    create_schema_entities_in_atlas(atlas_client, "source_schema", source_fields, "default.source_schema@hive")
-    create_schema_entities_in_atlas(atlas_client, "target_schema", target_fields, "default.target_schema@hive")
+    create_schema_entities_in_atlas(atlas_client, "source_schema_avroschema", schema_source, "default.source_schema_avroschema@avro")
+    create_schema_entities_in_atlas(atlas_client, "target_schema_avroschema", schema_target, "default.target_schema_avroschema@avro")
 
-    # Retrieve and print entities from Apache Atlas
-    get_schema_source = get_entities_from_atlas(atlas_client, "source_schema", "default.source_schema@hive")
-    get_schema_target = get_entities_from_atlas(atlas_client, "target_schema", "default.target_schema@hive")
 
-    show_schema(get_schema_source, "get_schema_source")
-    show_schema(get_schema_target, "get_schema_target")
+    # Retrieve schemas from Apache Atlas
+    get_source_schema_fields = get_schema_from_atlas(atlas_client, "source_schema_avroschema", "default.source_schema_avroschema@avro")
+    get_target_schema_fields = get_schema_from_atlas(atlas_client, "target_schema_avroschema", "default.target_schema_avroschema@avro")
+
+    # Sort in alphabetical order
+    get_source_schema_fields = sorted(get_source_schema_fields, key=lambda x: x["name"])
+    get_target_schema_fields = sorted(get_target_schema_fields, key=lambda x: x["name"])
+    show_schema(get_source_schema_fields, "get_schema_source_sparktable")
+    show_schema(get_target_schema_fields, "get_schema_target_sparktable")
 
 if __name__ == "__main__":
     main()

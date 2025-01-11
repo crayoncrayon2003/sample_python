@@ -6,10 +6,10 @@ def main():
     url = "http://localhost:5000/transform"
     headers = {"Content-Type": "application/json"}
     data = {
-        "table_source": "default.source_schema@hive",
-        "schema_source": "source_schema",
-        "table_target": "default.target_schema@hive",
-        "schema_target": "target_schema",
+        "table_source": "default.source_schema_sparktable@spark",
+        "schema_source": "source_schema_sparktable",
+        "table_target": "default.target_schema_sparktable@spark",
+        "schema_target": "target_schema_sparktable",
         "data": [
             {"Name": "Alice", "Age": 25},
             {"Name": "Bob", "Age": 30},

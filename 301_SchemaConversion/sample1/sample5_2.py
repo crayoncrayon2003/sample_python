@@ -1,6 +1,9 @@
 import os
 from flask import Flask, request, jsonify
 import pandas as pd
+import avro.schema
+import avro.io
+import io
 from apache_atlas.client.base_client import AtlasClient
 
 # Flask Server
@@ -10,7 +13,7 @@ APP = Flask(__name__)
 ATLAS_CLIENT = AtlasClient("http://localhost:21000", ("admin", "admin"))
 
 # Load schema from Atlas
-def get_entities_from_atlas(atlas_client:AtlasClient, schema_name, table_qualified_name):
+def get_entities_from_atlas(atlas_client: AtlasClient, schema_name, table_qualified_name):
     try:
         table_entity = atlas_client.entity.get_entity_by_attribute(
             type_name="hive_table",
@@ -22,13 +25,19 @@ def get_entities_from_atlas(atlas_client:AtlasClient, schema_name, table_qualifi
             raise ValueError(f"Schema name mismatch: Expected {schema_name}, Found {table_attributes.get('name')}")
 
         column_guids = [col["guid"] for col in table_attributes.get("columns", [])]
-        schema = {}
+        schema = {
+            "type": "record",
+            "name": schema_name,
+            "fields": []
+        }
 
         for column_guid in column_guids:
             column_entity = atlas_client.entity.get_entity_by_guid(column_guid)
             column_name = column_entity["entity"]["attributes"]["name"]
             column_type = column_entity["entity"]["attributes"].get("type", "string").lower()
-            schema[column_name] = column_type
+            avro_type = "string" if column_type == "string" else "int"
+
+            schema["fields"].append({"name": column_name, "type": avro_type})
 
         return schema
 
@@ -36,21 +45,75 @@ def get_entities_from_atlas(atlas_client:AtlasClient, schema_name, table_qualifi
         print(f"Failed to retrieve schema from Atlas: {e}")
         return None
 
-# convert schema
-def schema_transform(data, source_schema, target_schema):
-    df = pd.DataFrame(data)
-    transformed_data = {}
+def sort_schema_fields(schema):
+    sorted_fields = sorted(schema["fields"], key=lambda field: field["name"])
+    sorted_schema = {
+        "type": schema["type"],
+        "name": schema["name"],
+        "fields": sorted_fields,
+    }
+    return sorted_schema
 
-    for column, target_type in target_schema.items():
-        if column in df.columns:
-            if target_type == "int":
-                transformed_data[column] = df[column].astype(int)
-            elif target_type == "string":
-                transformed_data[column] = df[column].astype(str)
+
+def validate_data_with_schema(data, schema):
+    schema_name = schema["name"]
+
+    for record in data:
+        for field in schema["fields"]:
+            field_name = field["name"]
+            expected_type = field["type"]
+
+            if field_name not in record:
+                raise ValueError(
+                    f"In schema '{schema_name}', field '{field_name}' is missing in the record."
+                )
+
+            actual_value = record[field_name]
+            if expected_type == "string":
+                if not isinstance(actual_value, str):
+                    record[field_name] = str(actual_value)
+            elif expected_type == "int":
+                if not isinstance(actual_value, int):
+                    record[field_name] = int(actual_value)
+    return True
+
+def convert_to_target_type(value, target_type):
+    try:
+        if target_type == "string":
+            return str(value)
+        elif target_type == "int":
+            return int(value)
         else:
-            transformed_data[column] = None
+            return value
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"Failed to convert value '{value}' to type '{target_type}': {e}")
 
-    return pd.DataFrame(transformed_data)
+def schema_transform_avro(source_schema, target_schema, input_data):
+    try:
+        sorted_source_schema = sort_schema_fields(source_schema)
+        sorted_target_schema = sort_schema_fields(target_schema)
+
+        validate_data_with_schema(input_data, sorted_source_schema)
+
+        output_data = [
+            {
+                field["name"]: (
+                    convert_to_target_type(record[field["name"]], field["type"]) if field["name"] in record else None
+                )
+                for field in sorted_target_schema["fields"]
+            }
+            for record in input_data
+        ]
+
+        validate_data_with_schema(output_data, sorted_target_schema)
+
+        return output_data
+
+    except Exception as e:
+        print(f"Error during schema validation or transformation: {e}")
+        return None
+
+
 
 # Flask REST API Endpoint
 @APP.route('/transform', methods=['POST'])
@@ -74,17 +137,19 @@ def transform_data():
         if not schema_source or not schema_target:
             return jsonify({"error": "Failed to retrieve schemas from Apache Atlas"}), 500
 
-        # Transform to target schema from source schema
-        transformed_df = schema_transform(input_data, schema_source, schema_target)
+
+        transformed_data = schema_transform_avro(schema_source, schema_target, input_data)
+
+        if transformed_data is None:
+            return jsonify({"error": "Schema transformation failed"}), 500
 
         # respons body
-        output_data = transformed_df.to_dict(orient="records")
         output_json = {
             "table_source": input_table_source,
             "schema_source": input_schema_source_name,
             "table_target": input_table_target,
             "schema_target": input_schema_target_name,
-            "data": output_data
+            "data": transformed_data
         }
 
         return jsonify(output_json), 200
