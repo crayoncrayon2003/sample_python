@@ -27,11 +27,9 @@ class DataModelTransformer:
             default = rules.get("default")
             value = source_data.get(source) if source else default
 
-            # 値がどちらも None の場合スキップ
             if value is None:
                 continue
 
-            # ターゲットに値を配置
             keys = target.split(".")
             current = mapped_data
             for key in keys[:-1]:
@@ -40,7 +38,6 @@ class DataModelTransformer:
                 current = current[key]
             current[keys[-1]] = value
 
-            # name, temperature, humidity に追加のプロパティを補完
             if field in ["name", "temperature", "humidity"]:
                 current["type"] = rules.get("type", "defaultType")
                 current["metadata"] = {}
@@ -51,7 +48,6 @@ class DataModelTransformer:
     def validation(self, data, schema):
         try:
             validate(instance=data, schema=schema)
-            print("Validation successful.")
             return True
         except ValidationError as e:
             print(f"Validation error: {e.message}")
@@ -64,9 +60,6 @@ class DataModelTransformer:
 
         # Apply mapping to generate target data
         target_data = self._process_mapping(source_data, self.mapping)
-
-        # デバッグ: ターゲットデータ検証前に内容確認
-        print("Pre-validation target data:", json.dumps(target_data, indent=2))
 
         # Validate target data
         if not self.validation(target_data, self.target_schema):
@@ -94,13 +87,13 @@ def main():
         # Data Model Transformer
         target_data = transformer.transform(source_data)
 
-        print("Source data:")
-        print(json.dumps(source_data, indent=2))
-        print("Target data:")
-        print(json.dumps(target_data, indent=2))
-
     except (FileNotFoundError, ValueError, KeyError) as e:
         print(f"Error: {e}")
+
+    print("Source data:")
+    print(json.dumps(source_data, indent=2))
+    print("Target data:")
+    print(json.dumps(target_data, indent=2))
 
 
 if __name__ == "__main__":
