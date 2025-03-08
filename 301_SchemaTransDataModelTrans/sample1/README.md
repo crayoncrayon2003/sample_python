@@ -48,24 +48,14 @@ python3.12 sample4_3.py
 # Sample5
 ## install pandas
 ```
-pip install pandas
+python3.12 -m venv env
+source env/bin/activate
+pip install --upgrade pip setuptools
+pip install pyspark==3.5.5 py4j
+pip install pandas duckdb
 ```
 ## Run
 ```
 python3.12 sample5_1.py
 python3.12 sample5_2.py
-python3.12 sample5_3.py
 ```
-
-# Sample6
-## install pandas
-```
-pip install avro-python3
-```
-## Run
-```
-python3.12 sample6_1.py
-python3.12 sample6_2.py
-python3.12 sample6_3.py
-```
-

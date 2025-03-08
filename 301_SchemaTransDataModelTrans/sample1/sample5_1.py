@@ -135,18 +135,18 @@ if __name__ == "__main__":
     spark_df = spark.read.option("header", "true").csv(file_path)
 
     # optional
-    save_path = os.path.join(directory, "save_csv")
+    save_path = os.path.join(directory, "save_spark_csv")
     save_spark_df(spark_df, save_path)               # save schema/data
     spark_df = load_spark_df(spark, save_path)       # load schema/data
 
     # convert
-    file_path_sql = os.path.join(directory, "query.sql")
+    file_path_sql = os.path.join(directory, "query_spark.sql")
     cnv_df = convert(spark_df, file_path_sql, "recode")
     cnv_data = cnv_df.toJSON().collect()
 
     # save json
     cnv_data_parsed = [clean_json_values(json.loads(record)) for record in cnv_data]
-    output = os.path.join(directory, "output_csv.json")
+    output = os.path.join(directory, "output_spark_csv.json")
     with open(output, "w", encoding="utf-8") as f:
         json.dump(cnv_data_parsed, f, ensure_ascii=False, indent=4)
 
@@ -163,18 +163,18 @@ if __name__ == "__main__":
     spark_df = spark.createDataFrame(records, schema)
 
     # optional
-    save_path = os.path.join(directory, "save_json")
+    save_path = os.path.join(directory, "save_spark_json")
     save_spark_df(spark_df, save_path)               # save schema/data
     spark_df = load_spark_df(spark, save_path)       # load schema/data
 
     # convert
-    file_path_sql = os.path.join(directory, "query.sql")
+    file_path_sql = os.path.join(directory, "query_spark.sql")
     cnv_df = convert(spark_df, file_path_sql, "recode")
     cnv_data = cnv_df.toJSON().collect()
 
     # save json
     cnv_data_parsed = [clean_json_values(json.loads(record)) for record in cnv_data]
-    output = os.path.join(directory, "output_json.json")
+    output = os.path.join(directory, "output_spark_json.json")
     with open(output, "w", encoding="utf-8") as f:
         json.dump(cnv_data_parsed, f, ensure_ascii=False, indent=4)
 
