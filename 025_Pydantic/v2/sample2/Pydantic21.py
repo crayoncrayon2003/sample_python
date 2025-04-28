@@ -5,8 +5,8 @@ from pydantic import BaseModel, create_model
 from typing import Dict, Any, List, Optional
 
 ROOT   = os.path.dirname(os.path.abspath(__file__))
-OLD_SCHEMA = os.path.join(ROOT,"Pydantic6_old_schema.yml")
-NEW_SCHEMA = os.path.join(ROOT,"Pydantic6_new_schema.yml")
+OLD_SCHEMA = os.path.join(ROOT,"Pydantic21_old_schema.yml")
+NEW_SCHEMA = os.path.join(ROOT,"Pydantic21_new_schema.yml")
 
 def load_yaml(file_path: str) -> Dict[str, Any]:
     with open(file_path, 'r') as file:

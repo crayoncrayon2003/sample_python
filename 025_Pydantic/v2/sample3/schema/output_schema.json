@@ -1,0 +1,64 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "outputschema",
+    "type": "object",
+    "properties": {
+        "entityId": {
+            "type": "string",
+            "rex": "^urn:ngsi-ld:csv:[0-9]{3}$"
+        },
+        "entityType": {
+            "type": "string",
+            "enum": ["Place"]
+        },
+        "name": {
+            "type": "object",
+            "properties": {
+                "value": { "type": "string" },
+                "type": { "type": "string", "enum": ["Text"] }
+            },
+            "required": ["value", "type"]
+        },
+        "address": {
+            "type": "object",
+            "properties": {
+                "value": { "type": "string" },
+                "type": { "type": "string", "enum": ["Text"] }
+            },
+            "required": ["value", "type"]
+        },
+        "capacity": {
+            "type": "object",
+            "properties": {
+              "value": { "type": "number" },
+              "type": { "type": "string", "enum": ["Number"] }
+            },
+            "required": ["value", "type"]
+        },
+        "latitude": {
+            "type": "object",
+            "properties": {
+            "value": { "type": "number" },
+            "type": { "type": "string", "enum": ["Number"] }
+            },
+            "required": ["value", "type"]
+        },
+        "longitude": {
+            "type": "object",
+            "properties": {
+            "value": { "type": "number" },
+            "type": { "type": "string", "enum": ["Number"] }
+            },
+            "required": ["value", "type"]
+        }
+    },
+    "required": [
+      "entityId",
+      "entityType",
+      "name",
+      "address",
+      "capacity",
+      "latitude",
+      "longitude"
+    ]
+  }

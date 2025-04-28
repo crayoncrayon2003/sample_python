@@ -1,0 +1,19 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "inputschema",
+    "type": "object",
+    "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "capacity": { "type": "number" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+    },
+    "required": [
+        "name",
+        "address",
+        "capacity",
+        "latitude",
+        "longitude"
+    ]
+}
