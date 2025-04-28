@@ -128,7 +128,6 @@ def main():
     # -----------------------
     # 7. exec 2
     # -----------------------
-    print("\n== 配列出力 ==")
     output_json_list = [
         UnifiedModel(**row).model_dump_json(indent=2, idx=idx + 1, output_schema=output_schema)
         for idx, row in enumerate(csv_data)

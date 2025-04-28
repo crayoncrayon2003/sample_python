@@ -132,7 +132,6 @@ def main():
         output_model = convert_to_output(input_model, idx)
         output_list.append(output_model)
 
-    # JSON配列で出力
     output_json = [model.model_dump_json(indent=2) for model in output_list]
     print("[")
     print(",\n".join(output_json))

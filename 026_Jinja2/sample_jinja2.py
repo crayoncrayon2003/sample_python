@@ -32,20 +32,27 @@ def detect_ngsi_type(value: Any) -> str:
     else:
         return "Text"
 
-
 def main():
-    # 1. ファイルパスなど準備
     directory = os.path.dirname(os.path.abspath(__file__))
+    # -----------------------
+    # 1. load schema
+    # -----------------------
     input_schema_path = os.path.join(directory, "schema", "input_schema.json")
     output_schema_path = os.path.join(directory, "schema", "output_schema.json")
+
+    # -----------------------
+    # 2. Generate data model using datamodel-code-generator
+    #    The data model is output to a file.
+    # -----------------------
     output_dir = os.path.join(directory, "generated_models")
     os.makedirs(output_dir, exist_ok=True)
 
-    # 2. JSON Schema読み込み
     input_schema = load_json_schema(Path(input_schema_path))
     output_schema = load_json_schema(Path(output_schema_path))
 
-    # 3. Jinja2テンプレート環境設定
+    # -----------------------
+    # 3. setting Jinja2 env
+    # -----------------------
     env = Environment(
         loader=FileSystemLoader(searchpath=os.path.join(directory, "templates")),
         autoescape=select_autoescape(["j2"]),
@@ -54,18 +61,18 @@ def main():
     )
     template = env.get_template("ngsi_template.j2")
 
-    # 4. CSVデータ読み込み
+    # -----------------------
+    # 4. load csv file
+    # -----------------------
     csv_path = os.path.join(directory, "data.csv")
     csv_data = load_csv_data(Path(csv_path))
 
-    # 5. テンプレート出力（配列）
-    print("\n== 配列出力 ==")
+    # 5. exec
     output_json = template.render(
-        data=csv_data,  # 複数行のデータを渡す
+        data=csv_data,
         output_schema=output_schema,
         detect_ngsi_type=detect_ngsi_type
     )
-    # output_jsonは、カンマのインデント・改行は、json形式だけど人間がみで不自然なので成形
 
     print(json.dumps(json.loads(output_json), ensure_ascii=False, indent=4))
 
