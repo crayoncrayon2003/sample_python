@@ -1,0 +1,19 @@
+[
+    {% for row in data %}
+    {
+        "entityId": "urn:ngsi-ld:csv:{{ loop.index }}",
+        "entityType": "Place",
+        {% for field_name, field_info in output_schema.properties.items() %}
+            {% set value = row.get(field_name) %}
+            {% if value is not none %}
+            "{{ field_name }}": {
+                "value": {{ value | tojson }},
+                "type": "{{ detect_ngsi_type(value) }}"
+            }
+            {% if not loop.last %},{% endif %}
+            {% endif %}
+        {% endfor %}
+    }
+    {% if not loop.last %},{% endif %}
+    {% endfor %}
+]

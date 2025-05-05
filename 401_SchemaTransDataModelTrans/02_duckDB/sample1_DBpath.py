@@ -80,7 +80,7 @@ if __name__ == "__main__":
     cnv_df = parse_json_columns(cnv_df, json_columns)
 
     # save json
-    output_path = os.path.join(directory, "output_duckdb_csv.json")
+    output_path = os.path.join(directory, "output_duckdb_csv1.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(cnv_df.to_dict(orient="records"), f, ensure_ascii=False, indent=4)
 
@@ -103,6 +103,6 @@ if __name__ == "__main__":
     cnv_df = parse_json_columns(cnv_df, json_columns)
 
     # save json
-    output_path = os.path.join(directory, "output_duckdb_json.json")
+    output_path = os.path.join(directory, "output_duckdb_json1.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(cnv_df.to_dict(orient="records"), f, ensure_ascii=False, indent=4)

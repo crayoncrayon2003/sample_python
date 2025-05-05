@@ -1,0 +1,22 @@
+type: object
+properties:
+  name:
+    type: string
+  age:
+    type: integer
+  address:
+    type: object
+    properties:
+      street:
+        type: string
+      city:
+        type: string
+  phoneNumbers:
+    type: array
+    items:
+      type: object
+      properties:
+        type:
+          type: string
+        number:
+          type: string

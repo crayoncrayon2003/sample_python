@@ -1,3 +1,11 @@
+# create env
+```
+python3.12 -m venv env
+source env/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+
 # Sample1
 ## Run
 ```
@@ -13,10 +21,6 @@ python3.12 sample2_3.py
 ```
 
 # Sample3
-```
-pip install apache-atlas
-```
-
 ## build
 ```
 docker compose up -d
@@ -45,17 +49,8 @@ python3.12 sample4_2.py
 python3.12 sample4_3.py
 ```
 
-# Sample5
-## install pandas
+# delete env
 ```
-python3.12 -m venv env
-source env/bin/activate
-pip install --upgrade pip setuptools
-pip install pyspark==3.5.5 py4j
-pip install pandas duckdb
-```
-## Run
-```
-python3.12 sample5_1.py
-python3.12 sample5_2.py
+(env) deactivate
+rm -R env
 ```
