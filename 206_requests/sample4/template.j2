@@ -1,0 +1,11 @@
+[
+{% for row in data %}
+    {
+    {% for key, value in row.items() %}
+        "{{ key }}": {{ value | int }}
+        {% if not loop.last %},{% endif %}
+    {% endfor %}
+    }
+    {% if not loop.last %},{% endif %}
+{% endfor %}
+]
