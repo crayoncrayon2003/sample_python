@@ -1,2 +1,0 @@
-
-pip install datamodel_code_generator

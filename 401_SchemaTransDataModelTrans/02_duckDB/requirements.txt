@@ -1,4 +1,0 @@
-pyspark==3.5.5
-py4j
-pandas
-duckdb
