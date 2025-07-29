@@ -1,0 +1,12 @@
+{
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "deviceId": { "type": "string" },
+        "recordedAt": { "type": "string" },
+        "reading": { "type": ["number", "null"] }
+      },
+      "required": ["deviceId", "recordedAt", "reading"]
+    }
+  }

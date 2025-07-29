@@ -1,0 +1,45 @@
+<!-- ETL1/03_templates/report.html.j2 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_title }}</title>
+    <style>
+        body { font-family: sans-serif; }
+        table { border-collapse: collapse; width: 80%; margin-top: 20px; }
+        th, td { border: 1px solid #dddddd; text-align: left; padding: 8px; }
+        thead th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>{{ report_title }}</h1>
+    <p>This report was automatically generated.</p>
+
+    <!-- 
+      This table dynamically generates columns and rows based on the 'data' variable,
+      which is expected to be a list of dictionaries.
+    -->
+    <table>
+        <thead>
+            <tr>
+                {# Generate table headers from the keys of the first data row #}
+                {% for key in data[0].keys() %}
+                <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {# Iterate over each row in the data to create table rows #}
+            {% for row in data %}
+            <tr>
+                {# Iterate over each value in the row to create table cells #}
+                {% for value in row.values() %}
+                <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

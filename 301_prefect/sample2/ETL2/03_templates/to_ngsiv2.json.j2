@@ -1,0 +1,21 @@
+{# ETL2/03_templates/to_ngsiv2.json.j2 #}
+[
+  {% for entity in data %}
+  {
+    "id": "{{ entity.id }}",
+    "type": "{{ entity.type }}",
+    "refDevice": {
+      "type": "Relationship",
+      "value": "{{ entity.refDevice }}"
+    },
+    "dateObserved": {
+      "type": "DateTime",
+      "value": "{{ entity.dateObserved.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if entity.dateObserved is not none else '' }}"
+    },
+    "measurement": {
+      "type": "Number",
+      "value": {{ entity.measurement if entity.measurement is not none else 'null' }}
+    }
+  }{{ "," if not loop.last }}
+  {% endfor %}
+]

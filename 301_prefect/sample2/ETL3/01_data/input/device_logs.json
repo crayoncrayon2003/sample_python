@@ -1,0 +1,27 @@
+[
+    {
+      "deviceId": "temp-sensor-10",
+      "recordedAt": "2025-07-29T11:00:00Z",
+      "reading": 22.3
+    },
+    {
+      "deviceId": "humid-sensor-5",
+      "recordedAt": "2025-07-29T11:01:00Z",
+      "reading": 45.8
+    },
+    {
+      "deviceId": "temp-sensor-10",
+      "recordedAt": "2025-07-29T11:02:00Z",
+      "reading": 22.4
+    },
+    {
+      "deviceId": "co2-sensor-1",
+      "recordedAt": "not-a-date",
+      "reading": 800
+    },
+    {
+      "deviceId": "humid-sensor-5",
+      "recordedAt": "2025-07-29T11:04:00Z",
+      "reading": null
+    }
+  ]
