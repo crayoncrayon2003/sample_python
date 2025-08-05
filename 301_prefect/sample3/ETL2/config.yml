@@ -1,0 +1,62 @@
+name: "ETL2 - CSV to NGSI-v2 JSON"
+
+pipeline:
+  # Step 1: Extract data from the source measurements CSV file.
+  - name: "Extract Measurements CSV"
+    plugin: "from_local_file"
+    params:
+      path: "ETL2/01_data/input/measurements_ok.csv"
+      # path: "ETL2/01_data/input/measurements_ng.csv"
+
+  # Step 2: Pivot data from long to wide format
+  - name: "Pivot Raw Data"
+    plugin: "with_duckdb"
+    params:
+      query_file: "ETL2/05_queries/00_pivot_data.sql"
+      table_name: "measurements"
+
+  # ★★★ Step 3: Validate the Pivoted Data using BusinessRulesValidator ★★★
+  - name: "Validate Pivoted Data"
+    plugin: "business_rules" # with_duckdb から変更
+    params:
+      rules:
+        # この式は「不正な行」を検出する
+        - name: "Temperature out of plausible range"
+          expression: "temperature < -50 or temperature > 100"
+        - name: "Humidity out of plausible range"
+          expression: "humidity < 0 or humidity > 100"
+        - name: "Timestamp is missing"
+          expression: "timestamp.isnull()" # pandasのクエリでは .isnull() を使う
+
+  # Step 4: Transform the data into the target NGSI structure using SQL.
+  # このステップは、Step 3をパスした元のデータ全体を入力として受け取る
+  - name: "Structure Data for NGSI"
+    plugin: "with_duckdb"
+    params:
+      query_file: "ETL2/05_queries/02_structure_to_ngsi.sql"
+      table_name: "measurements" # `Validate Pivoted Data` の結果を参照
+
+  # ... 以降のステップは同じ ...
+  - name: "Transform to NGSI-v2 Entities"
+    plugin: "to_ngsi"
+    params:
+      template_path: "ETL2/04_templates/to_ngsiv2.json.j2"
+      entity_type: "Measurement"
+      id_prefix: "urn:ngsi-ld:Measurement:"
+      id_column: "sensor_id"
+      output_column_name: "ngsi_entity_json"
+
+  - name: "Validate NGSI-v2 Output"
+    plugin: "ngsi_validator"
+    params:
+      target_column: "ngsi_entity_json"
+      ngsi_version: "v2"
+
+  - name: "Load to JSONL File"
+    plugin: "to_local_file"
+    params:
+      output_path: "ETL2/01_data/output/ngsi_entities.json"
+      format: "json"
+      pandas_options:
+        orient: "records"
+        lines: True

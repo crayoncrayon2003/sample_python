@@ -1,0 +1,38 @@
+# ETL1/config.yml
+
+name: "ETL1 - CSV to Parquet"
+
+pipeline:
+  - name: "Extract Source CSV"
+    plugin: "from_local_file"
+    params:
+      path: "ETL1/01_data/input/source_data.csv"
+
+  - name: "Validate Raw Data"
+    plugin: "data_quality"
+    params:
+      rules:
+        - { column: "product_id", type: "not_null" }
+        - { column: "product_id", type: "is_unique" }
+        - { column: "price", type: "in_range", min: 0 }
+        - { column: "quantity", type: "in_range", min: 0 }
+
+  - name: "Add Timestamp with DuckDB"
+    plugin: "with_duckdb"
+    params:
+      query_file: "ETL1/05_queries/add_timestamp.sql"
+      table_name: "sales_data"
+
+  - name: "Validate Transformed Data"
+    plugin: "data_quality"
+    params:
+      rules:
+        - { column: "product_id", type: "not_null" }
+        - { column: "processing_timestamp", type: "not_null" }
+
+  # 最後のステップとして、Parquetファイルをロード（保存）する
+  - name: "Load to Parquet File"
+    plugin: "to_local_file"
+    params:
+      output_path: "ETL1/01_data/output/processed_sales.parquet"
+      format: "parquet"

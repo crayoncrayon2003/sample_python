@@ -1,0 +1,40 @@
+# requirements.txt
+#
+# Python Version: 3.12.x
+# Objective: Resolve deep dependency conflicts between prefect and pydantic.
+
+# Core Framework & Orchestration
+# Pinning prefect and its critical dependency pydantic to known compatible versions.
+# --------------------------------------------------------------------------------
+prefect==2.19.4
+pydantic==2.7.4
+pyyaml==6.0.1
+
+# Prefect Dependencies (explicitly listed to resolve issues)
+# -----------------------------------------------------------
+griffe==0.44.0
+
+# Data Handling & Transformation
+# ------------------------------
+pandas==2.2.2
+duckdb==1.0.0
+jinja2==3.1.4
+pyarrow==16.1.0
+
+# Plugin-specific Dependencies
+# ----------------------------
+requests==2.32.3
+aiohttp==3.9.5
+paramiko==3.4.0
+sqlalchemy==2.0.31
+psycopg2-binary==2.9.9
+charset-normalizer==3.3.2
+
+# Geospatial dependencies
+fiona==1.9.6
+pyproj==3.6.1
+shapely==2.0.4
+geopandas==0.14.4
+
+# Validator dependencies
+jsonschema==4.23.0

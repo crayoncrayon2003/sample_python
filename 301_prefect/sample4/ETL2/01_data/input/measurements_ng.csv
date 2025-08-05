@@ -1,0 +1,5 @@
+sensor_id,timestamp,metric,value,unit,location
+sensor-01,2025-08-04T12:00:00Z,temperature,25.5,celsius,"41.3874,2.1686"
+sensor-01,2025-08-04T12:00:00Z,humidity,60,percent,"41.3874,2.1686"
+sensor-02,2025-08-04T12:01:00Z,temperature,999,celsius,"40.4168,3.7038"
+sensor-02,2025-08-04T12:01:00Z,humidity,58,percent,"40.4168,3.7038"

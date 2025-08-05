@@ -11,7 +11,10 @@ from scripts.utils import load_sql_template
 
 @task
 def transform_with_duckdb(
-    input_path: str, working_dir: Path, query_path: Path, **query_params: Any
+    input_path: str,
+    working_dir: Path,
+    query_path: Path,
+    **query_params: Any
 ) -> str:
     """
     Transforms data using a DuckDB query loaded from an external SQL file.

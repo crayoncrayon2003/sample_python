@@ -1,0 +1,162 @@
+@startuml ETL Framework - Fully Connected Class Diagram
+
+' --- スタイル定義 ---
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Segoe UI", "Helvetica", "Arial"
+skinparam package {
+    BackgroundColor LightBlue
+    BorderColor RoyalBlue
+}
+skinparam class {
+    BackgroundColor LightYellow
+    ArrowColor Navy
+    BorderColor Navy
+}
+skinparam interface {
+    BackgroundColor LightPink
+    BorderColor Firebrick
+}
+skinparam enum {
+    BackgroundColor LightGreen
+}
+
+
+' #############################################
+' ###           CORE FRAMEWORK              ###
+' #############################################
+package "scripts.core" {
+
+    package "orchestrator" {
+        class FlowExecutor
+        class "task_wrapper" as TaskWrapper <<function>>
+    }
+
+    package "pipeline" {
+        class PipelineParser
+        class StepExecutor
+        class DependencyResolver
+    }
+
+    package "plugin_manager" {
+        class PluginManager
+        class "PluginRegistry (singleton)" as PluginRegistry
+        interface PluginInterface
+        interface ExtractorInterface
+        interface CleanserInterface
+        interface TransformerInterface
+        interface ValidatorInterface
+        interface LoaderInterface
+    }
+
+    package "data_container" {
+        class DataContainer
+        enum SupportedFormats
+    }
+
+    package "config" {
+        class ConfigLoader
+        class ConfigValidator
+    }
+}
+
+
+' #############################################
+' ###              PLUGINS                  ###
+' #############################################
+package "scripts.plugins" {
+
+    package "extractors" {
+        abstract class BaseExtractor
+        class HttpExtractor
+    }
+
+    package "cleansing" {
+        abstract class BaseCleanser
+        class DuplicateRemover
+    }
+
+    package "transformers" {
+        abstract class BaseTransformer
+        class DuckDBTransformer
+    }
+
+    package "validators" {
+        abstract class BaseValidator
+        class DataQualityValidator
+    }
+
+    package "loaders" {
+        abstract class BaseLoader
+        class ContextBrokerLoader
+    }
+}
+
+
+' #############################################
+' ###             UTILITIES                 ###
+' #############################################
+package "scripts.utils" {
+    class "file_utils" as FileUtils <<utility>>
+    class "logger" as Logger <<utility>>
+}
+
+
+' #############################################
+' ###            RELATIONSHIPS              ###
+' #############################################
+
+' --- トップレベルの起動フロー ---
+class "ETL Flow\n(etl_flow.py)" as EtlFlowScript
+EtlFlowScript ..> FlowExecutor : initiates
+EtlFlowScript ..> Logger : uses
+
+' --- オーケストレーションとパイプライン実行の中心的な流れ ---
+FlowExecutor o-- PipelineParser
+FlowExecutor o-- StepExecutor
+' task_wrapper is now used inside the EtlFlowScript
+EtlFlowScript ..> TaskWrapper : uses
+StepExecutor o-- PluginManager
+StepExecutor ..> DataContainer : passes & receives
+
+' --- パーサーとリゾルバ ---
+PipelineParser ..> FileUtils : uses for file access
+' FlowExecutor ..> DependencyResolver : (future use)
+
+' --- プラグイン管理 ---
+PluginManager ..> PluginRegistry : uses to find plugins
+PluginManager ..> PluginInterface : creates instances of
+
+' --- インターフェースとベースクラスの継承 ---
+PluginInterface <|-- ExtractorInterface
+PluginInterface <|-- CleanserInterface
+PluginInterface <|-- TransformerInterface
+PluginInterface <|-- ValidatorInterface
+PluginInterface <|-- LoaderInterface
+
+ExtractorInterface <|-- BaseExtractor
+CleanserInterface <|-- BaseCleanser
+TransformerInterface <|-- BaseTransformer
+ValidatorInterface <|-- BaseValidator
+LoaderInterface <|-- BaseLoader
+
+' --- すべての具象プラグインは対応するBaseクラスを継承 ---
+BaseExtractor <|-- HttpExtractor
+BaseCleanser <|-- DuplicateRemover
+BaseTransformer <|-- DuckDBTransformer
+BaseValidator <|-- DataQualityValidator
+BaseLoader <|-- ContextBrokerLoader
+
+' --- 各プラグインとDataContainer/Utilsの利用関係 ---
+' すべてのプラグインはDataContainerとLoggerを利用する (代表例)
+HttpExtractor ..> DataContainer : creates
+DuckDBTransformer ..> DataContainer : uses
+ContextBrokerLoader ..> DataContainer : uses
+DataQualityValidator ..> Logger : uses for logging
+
+' --- data_containerとconfigパッケージの利用 ---
+PluginInterface ..> DataContainer : uses in method signatures
+BaseExtractor ..> SupportedFormats : (can use)
+JsonSchemaValidator ..> FileUtils : (can use for schema loading)
+ConfigValidator ..> "pydantic.BaseModel" : (external dependency)
+
+@enduml
