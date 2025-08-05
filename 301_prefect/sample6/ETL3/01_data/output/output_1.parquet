@@ -1,0 +1,4 @@
+product_id,product_name,price,quantity,branch_status
+P001,Laptop,1200.0,10,branch_A
+P002,Mouse,25.5,50,branch_A
+P003,Keyboard,75.0,30,branch_A

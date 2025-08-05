@@ -1,0 +1,135 @@
+@startuml ETL Framework - Builder-based Design with Pluggy (Comprehensive - Syntax Corrected)
+
+' --- スタイル定義 ---
+' --- スタイル定義 ---
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Segoe UI", "Helvetica", "Arial"
+skinparam package {
+    BackgroundColor LightBlue
+    BorderColor RoyalBlue
+}
+skinparam class {
+    BackgroundColor LightYellow
+    ArrowColor Navy
+    BorderColor Navy
+}
+skinparam interface {
+    BackgroundColor LightPink
+    BorderColor Firebrick
+}
+skinparam enum {
+    BackgroundColor LightGreen
+}
+skinparam abstract {
+    BackgroundColor LemonChiffon
+}
+
+' #############################################
+' ###      ETL FLOW DEFINITION FILE         ###
+' #############################################
+class "ETL Flow\n(e.g., ETL1/etl_flow.py)" as EtlFlowScript
+
+' #############################################
+' ###           CORE FRAMEWORK              ###
+' #############################################
+package "scripts.core" {
+    package "pipeline" {
+        class PipelineBuilder
+        class StepExecutor
+        class DependencyResolver
+    }
+    package "plugin_manager" {
+        class FrameworkManager as "FrameworkManager (singleton)"
+        class EtlHookSpecs <<HookSpec>>
+    }
+    package "data_container" {
+        class DataContainer
+        enum SupportedFormats
+    }
+    package "config" {
+        class ConfigLoader
+        class ConfigValidator
+    }
+}
+
+' #############################################
+' ###              PLUGINS                  ###
+' #############################################
+package "scripts.plugins" {
+    package "extractors" {
+        class LocalFileExtractor
+        class LocalJsonExtractor
+        class HttpExtractor
+        class FtpExtractor
+        class ScpExtractor
+        class DatabaseExtractor
+    }
+    package "cleansing" {
+        class ArchiveExtractor
+        class EncodingConverter
+        class FormatDetector
+        class DuplicateRemover
+        class NullHandler
+    }
+    package "transformers" {
+        class DuckDBTransformer
+        class Jinja2Transformer
+        class ToNxsiTransformer
+        class CsvProcessor
+        class JsonProcessor
+        class GtfsProcessor
+        class ShapefileProcessor
+        class DataFrameJoiner
+    }
+    package "validators" {
+        class JsonSchemaValidator
+        class DataQualityValidator
+        class NgsiValidator
+        class BusinessRulesValidator
+    }
+    package "loaders" {
+        class LocalFileLoader
+        class HttpLoader
+        class FtpLoader
+        class ScpLoader
+        class ContextBrokerLoader
+        class DatabaseLoader
+    }
+}
+
+' #############################################
+' ###             UTILITIES                 ###
+' #############################################
+package "scripts.utils" {
+    class "config_loader" as ConfigLoaderUtil <<utility>>
+    class "sql_template" as SqlTemplateUtil <<utility>>
+    class "file_utils" as FileUtilsUtil <<utility>>
+    class "logger" as LoggerUtil <<utility>>
+}
+
+' #############################################
+' ###            RELATIONSHIPS              ###
+' #############################################
+
+' --- Main Control Flow & Dependencies ---
+EtlFlowScript ..> PipelineBuilder : creates & configures DAG
+PipelineBuilder ..> StepExecutor : uses internally to create Prefect tasks
+StepExecutor o-- FrameworkManager : uses singleton
+FrameworkManager ..> EtlHookSpecs : uses for spec
+FrameworkManager ..> "Plugin Classes" : discovers & instantiates
+
+' --- Plugin Implementation (No Inheritance from Base Classes) ---
+LocalFileExtractor ..|> EtlHookSpecs : implements
+DuckDBTransformer ..|> EtlHookSpecs : implements
+DataFrameJoiner ..|> EtlHookSpecs : implements
+' (All other plugins also implement the hook specs)
+
+' --- Utility and Core Component Usage (remains largely the same) ---
+StepExecutor ..> DataContainer : passes between steps
+DuckDBTransformer ..> SqlTemplateUtil : uses to render query
+JsonSchemaValidator ..> ConfigLoaderUtil : uses to load schema
+HttpExtractor ..> DataContainer : creates
+ToLocalFileLoader ..> DataContainer : receives
+DataFrameJoiner ..> DataContainer : receives multiple, returns one
+EtlFlowScript ..> LoggerUtil : uses for logging
+ConfigValidator ..> "pydantic.BaseModel" : (external)
