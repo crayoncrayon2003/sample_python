@@ -1,0 +1,25 @@
+{# ETL2/04_templates/to_ngsiv2.json.j2 #}
+{#
+  This template creates a single NGSI-v2 entity.
+  All keys must be enclosed in double quotes to be valid JSON.
+#}
+{
+  "id": "{{ entity_id }}",
+  "type": "{{ entity_type }}",
+  "observedAt": {
+    "type": "DateTime",
+    "value": "{{ observed_at_iso }}"
+  },
+  "temperature": {
+    "type": "Number",
+    "value": {{ temp_value }}
+  },
+  "relativeHumidity": {
+    "type": "Number",
+    "value": {{ humidity_value / 100 }}
+  },
+  "location": {
+    "type": "geo:point",
+    "value": "{{ latitude }}, {{ longitude }}"
+  }
+}

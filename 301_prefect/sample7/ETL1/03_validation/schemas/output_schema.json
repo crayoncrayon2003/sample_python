@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Validated Sales Data",
+  "description": "Schema for the sales data after transformation.",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string"
+    },
+    "product_name": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "quantity": {
+      "type": "integer"
+    },
+    "processing_timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "product_id",
+    "price",
+    "quantity",
+    "processing_timestamp"
+  ]
+}
