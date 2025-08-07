@@ -1,9 +1,7 @@
-@startuml ETL Framework - Builder-based Design with Pluggy (Comprehensive - Syntax Corrected)
+@startuml ETL Framework - Final Design (Compatibility Mode)
 
-' --- スタイル定義 ---
-' --- スタイル定義 ---
+' --- スタイル定義 (基本的なもののみ) ---
 skinparam classAttributeIconSize 0
-skinparam defaultFontName "Segoe UI", "Helvetica", "Arial"
 skinparam package {
     BackgroundColor LightBlue
     BorderColor RoyalBlue
@@ -13,28 +11,23 @@ skinparam class {
     ArrowColor Navy
     BorderColor Navy
 }
-skinparam interface {
-    BackgroundColor LightPink
-    BorderColor Firebrick
-}
 skinparam enum {
     BackgroundColor LightGreen
-}
-skinparam abstract {
-    BackgroundColor LemonChiffon
 }
 
 ' #############################################
 ' ###      ETL FLOW DEFINITION FILE         ###
 ' #############################################
-class "ETL Flow\n(e.g., ETL1/etl_flow.py)" as EtlFlowScript
+package "ETL Definition" {
+    class "etl_flow.py" as EtlFlowScript
+}
+
 
 ' #############################################
 ' ###           CORE FRAMEWORK              ###
 ' #############################################
 package "scripts.core" {
     package "pipeline" {
-        class PipelineBuilder
         class StepExecutor
         class DependencyResolver
     }
@@ -51,6 +44,7 @@ package "scripts.core" {
         class ConfigValidator
     }
 }
+
 
 ' #############################################
 ' ###              PLUGINS                  ###
@@ -97,6 +91,7 @@ package "scripts.plugins" {
     }
 }
 
+
 ' #############################################
 ' ###             UTILITIES                 ###
 ' #############################################
@@ -107,29 +102,33 @@ package "scripts.utils" {
     class "logger" as LoggerUtil <<utility>>
 }
 
+
 ' #############################################
 ' ###            RELATIONSHIPS              ###
 ' #############################################
 
 ' --- Main Control Flow & Dependencies ---
-EtlFlowScript ..> PipelineBuilder : creates & configures DAG
-PipelineBuilder ..> StepExecutor : uses internally to create Prefect tasks
-StepExecutor o-- FrameworkManager : uses singleton
+EtlFlowScript ..> StepExecutor : uses
+EtlFlowScript ..> ConfigLoader : uses
+EtlFlowScript ..> LoggerUtil : uses
+
+StepExecutor ..> FrameworkManager : uses
 FrameworkManager ..> EtlHookSpecs : uses for spec
 FrameworkManager ..> "Plugin Classes" : discovers & instantiates
 
-' --- Plugin Implementation (No Inheritance from Base Classes) ---
+' --- Plugin Implementation (All plugins implement hooks) ---
+' (代表例のみを線で結び、図の可読性を保ちます)
 LocalFileExtractor ..|> EtlHookSpecs : implements
+DuplicateRemover ..|> EtlHookSpecs : implements
 DuckDBTransformer ..|> EtlHookSpecs : implements
-DataFrameJoiner ..|> EtlHookSpecs : implements
-' (All other plugins also implement the hook specs)
+DataQualityValidator ..|> EtlHookSpecs : implements
+LocalFileLoader ..|> EtlHookSpecs : implements
 
-' --- Utility and Core Component Usage (remains largely the same) ---
-StepExecutor ..> DataContainer : passes between steps
-DuckDBTransformer ..> SqlTemplateUtil : uses to render query
-JsonSchemaValidator ..> ConfigLoaderUtil : uses to load schema
-HttpExtractor ..> DataContainer : creates
-ToLocalFileLoader ..> DataContainer : receives
-DataFrameJoiner ..> DataContainer : receives multiple, returns one
-EtlFlowScript ..> LoggerUtil : uses for logging
-ConfigValidator ..> "pydantic.BaseModel" : (external)
+' --- Data Flow ---
+StepExecutor ..> DataContainer : receives & returns
+
+' --- Utility Usage Examples ---
+DuckDBTransformer ..> SqlTemplateUtil
+JsonSchemaValidator ..> ConfigLoaderUtil
+
+@enduml
