@@ -1,0 +1,10 @@
+# Web Framework & API
+fastapi==0.115.5
+uvicorn[standard]==0.35.0
+
+# HTTP Client
+httpx==0.28.1
+
+# MCP (Model Context Protocol)
+mcp==1.24.0
+fastmcp==2.14.2
