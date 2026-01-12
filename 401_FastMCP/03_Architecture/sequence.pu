@@ -1,0 +1,130 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+actor "ユーザ" as User
+
+box "アプリケーション\n（MCPクライアント）" #F0F8FF
+    participant "UI\n" as UI
+    participant "C1\n(SSE受信用)" as C1
+    participant "C2\n(指示送信用)" as C2
+end box
+
+box "LLM API\n" #F0F0F8
+    participant "LLM\n" as LLM
+end box
+
+box "MCPサーバ\n" #F8F0FF
+    participant "S1\n(SSE送信担当)" as S1
+    participant "S2\n(HTTP受信担当)" as S2
+end box
+
+box "外部システム\n" #FFF5EE
+    participant "REST APIサーバ\n" as API
+end box
+
+== Step 0: ユーザー入力 ==
+User -> UI : 「キー "test" に値 "hello" を保存して」
+activate UI
+
+== Step 1: MCP接続確立 ==
+UI -> C1 : MCP接続開始
+activate C1
+C1 -> S1 : GET /sse (接続リクエスト)
+activate S1
+S1 -->> C1 : 200 OK (session_id=XXXX返却)
+note right of C1 : EventSourceによる\nストリーム維持開始
+
+== Step 2: 初期化 (Initialize) ==
+UI -> C2 : MCP初期化
+activate C2
+C2 -> S2 : POST /messages/?session_id=XXXX\nbody={"method": "initialize"}
+activate S2
+S2 -->> C2 : 202 Accepted
+deactivate C2
+
+S2 -> S1 : [内部] 初期化処理実行
+S1 -->> C1 : [SSE] initialize response
+C1 -> UI : 初期化完了
+deactivate S2
+
+== Step 3: ツールリスト要求 (listTools) ==
+UI -> C2 : ツールリスト取得
+activate C2
+C2 -> S2 : POST /messages/?session_id=XXXX\nbody={"method": "tools/list"}
+activate S2
+S2 -->> C2 : 202 Accepted
+deactivate C2
+
+S2 -> S1 : [内部] ツールリスト生成通知
+S1 -->> C1 : [SSE] listTools response\n[{name: "store_set", description: "...", ...}]
+C1 -> UI : ツールリスト受信
+deactivate S2
+note right of UI : MCPツール定義を\nLLM API形式に変換
+
+== Step 4: LLMに問い合わせ ==
+UI -> LLM : POST /v1/messages\n{"messages": [{role: "user", content: "..."}],\n "tools": [{name: "store_set", ...}]}
+activate LLM
+note right of LLM : ユーザーの意図を理解\nツール使用を判断
+LLM -->> UI : {"type": "tool_use",\n "name": "store_set",\n "input": {"key": "test", "value": "hello"}}
+deactivate LLM
+note right of UI : LLMが「store_setを使う」\nと判断
+
+== Step 5: ツール実行 (callTool) ==
+UI -> C2 : ツール実行依頼
+activate C2
+C2 -> S2 : POST /messages/?session_id=XXXX\nbody={"method": "tools/call",\n "params": {"name": "store_set",\n "arguments": {"key": "test", "value": "hello"}}}
+activate S2
+S2 -->> C2 : 202 Accepted
+deactivate C2
+
+group タスク処理 (外部連携)
+    S2 -> API : POST /store/set\n{"key": "test", "value": "hello"}
+    activate API
+    API -> API : データ保存
+    API -->> S2 : {"status": "ok"}
+    deactivate API
+end
+
+S2 -> S1 : [内部] 実行結果転送
+deactivate S2
+S1 -->> C1 : [SSE] callTool response\n{"result": {"content": [{"type": "text",\n "text": "✅ キー 'test' に値 'hello' を保存しました"}]}}
+C1 -> UI : ツール実行結果受信
+note right of UI : 完了
+
+== Step 6: LLMに結果を送信して最終回答生成 ==
+UI -> LLM : POST /v1/messages\n{"messages": [...],\n "tool_result": "✅ キー 'test' に値 'hello' を保存しました"}
+activate LLM
+note right of LLM : ツール結果を元に\n最終回答を生成
+LLM -->> UI : {"type": "text",\n "text": "キー 'test' に値 'hello' を保存しました"}
+deactivate LLM
+
+== Step 7: ユーザーに表示 ==
+UI -->> User : 「キー 'test' に値 'hello' を保存しました」
+
+== Step 8: 接続終了 ==
+UI -> C2 : MCP切断
+activate C2
+C2 -> S2 : POST /messages/?session_id=XXXX\nbody={"method": "notifications/cancelled"}
+activate S2
+S2 -->> C2 : 200 OK / 202 Accepted
+deactivate C2
+
+S2 -> S1 : [内部] セッション破棄指示通知
+S1 -->> C1 : [SSE] 終了通知 (Optional)
+deactivate S2
+
+deactivate S1
+deactivate C1
+deactivate UI
+note over C1, S1 : SSEコネクション切断
+
+note over User, API
+  **ポイント:**
+  ・LLMは「判断」のみ（ツール使用の提案）
+  ・MCPクライアント（C1/C2）がLLMとMCPサーバを仲介
+  ・実際のツール実行: MCPサーバ → REST API
+  ・LLMは2回呼ばれる（判断時 + 最終回答生成時）
+end note
+
+@enduml

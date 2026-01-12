@@ -1,0 +1,110 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK JP"
+skinparam shadowing false
+
+skinparam component {
+  BackgroundColor #F0F8FF
+  BorderColor #4682B4
+  ArrowColor #4682B4
+}
+
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+
+' ユーザー
+actor "ユーザ" as User #FFE4E1
+
+' アプリケーション層
+package "アプリケーション\n（ユーザが使っているアプリ）" #F0F8FF {
+  component "UI\n（VSCode/ブラウザ等）" as UI
+
+  package "MCPクライアント\n（アプリ内蔵）" #E6F3FF {
+    component "C1\n(SSE受信用)" as C1
+    component "C2\n(指示送信用)" as C2
+  }
+}
+
+' LLM API（クラウド）
+cloud "LLM API\n（外部サービス）" #F0F0F8 {
+  component "LLM\n(推論エンジン)" as LLM
+}
+
+' MCPサーバ（ローカル）
+package "MCPサーバ\n（ローカル実行）" #F8F0FF {
+  component "S1\n(SSE送信担当)" as S1
+  component "S2\n(HTTP受信担当)" as S2
+  component "ツール実行\nエンジン" as Engine
+}
+
+' 外部REST API
+package "外部システム" #FFF5EE {
+  database "REST API\nサーバ" as REST_API
+}
+
+' 接続関係
+User -down-> UI : 操作
+
+UI -down-> C1 : ツールリスト\n取得依頼
+UI -down-> C2 : ツール実行\n依頼
+UI -right-> LLM : HTTPS\n(REST API)\nツール使用判断
+
+C1 -down-> S1 : SSE接続\n(JSON-RPC)\n受信専用
+C2 -down-> S2 : HTTP POST\n(JSON-RPC)\n送信専用
+
+S1 -right-> S2 : 内部連携\n(session_id紐付け)
+S2 -down-> Engine : ツール実行\n要求
+
+Engine -down-> REST_API : HTTP\n(REST API)\nリクエスト
+
+' 戻りの矢印
+REST_API -up-> Engine : 実行結果
+Engine -up-> S2 : 結果
+S2 -up-> S1 : 結果転送
+S1 -up-> C1 : SSEイベント
+C1 -up-> UI : ツール実行\n結果
+
+LLM -left-> UI : HTTPS\n(REST API)\nツール使用提案 /\n最終回答
+
+' 注釈
+note right of LLM
+  **LLMの役割**
+  ・ユーザーの意図理解
+  ・ツール使用判断
+  ・最終回答生成
+end note
+
+note bottom of Engine
+  **MCPサーバの役割**
+  ・ツールの実装
+  ・外部APIとの連携
+  ・データ変換
+end note
+
+note bottom of REST_API
+  **外部REST APIの役割**
+  ・実際のビジネスロジック
+  ・データ永続化
+  ・外部サービス連携
+end note
+
+note left of C1
+  **MCPクライアントの役割**
+  ・LLMとMCPサーバの仲介
+  ・ツール定義の変換
+  ・セッション管理
+end note
+
+' 通信プロトコルの説明
+note bottom of UI
+  <b>通信プロトコル:</b>
+  ・UI ⇄ LLM API: HTTPS (REST API)
+  ・MCPクライアント ⇄ MCPサーバ: stdio/SSE (JSON-RPC 2.0)
+  ・MCPサーバ ⇄ REST API: HTTP (REST API)
+end note
+
+@enduml
