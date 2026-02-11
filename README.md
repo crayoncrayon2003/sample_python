@@ -33,14 +33,14 @@ $ which python3.11
 
 ## setting for alternatives
 ```
-update-alternatives --install /usr/local/bin/python python /usr/bin/python3.9 1
-update-alternatives --install /usr/local/bin/python python /usr/bin/python3.10 2
-update-alternatives --install /usr/local/bin/python python /usr/bin/python3.11 3
+sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python3.9 1
+sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python3.10 2
+sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python3.11 3
 ```
 
 ## swtich ptyhon version
 ```
-update-alternatives --config python
+sudo update-alternatives --config python
 ```
 
 # run
