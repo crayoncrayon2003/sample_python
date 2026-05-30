@@ -50,7 +50,7 @@ my_project_name$  source .venv/bin/activate
 ```
 
 # 6. Reproducing dependencies
-# 6.1.  create "Lock File"
+## 6.1.  create "Lock File"
 
 lockファイルを生成
 
@@ -59,12 +59,37 @@ lockファイルを生成
 ```
 
 
-# 6.2.  Reinstall from "Lock File"
+## 6.2.  Reinstall from "Lock File"
 
 lockファイルから再インストール
 
 ```bash
 (my_project_name) $ uv sync
+```
+
+## 6.3.  Why UV
+Differences in Version Control Methods
+
++ requirements.txt  ->  Manual management
++ uv.lock           ->  Automatic management via uv
+
+
+## 6.4.  Conversion
+### 6.4.1 requirements.txt -> uv.lock
+
+Read the contents of `requirements.txt` and automatically generate `uv.lock`.
+
+```bash
+(my_project_name) $ uv add -r requirements.txt
+```
+
+
+### 6.4.2 uv.lock -> requirements.txt
+
+Export the contents of uv.lock to requirements.txt format.
+
+```bash
+(my_project_name) $ uv pip compile pyproject.toml -o requirements.txt
 ```
 
 
