@@ -1,6 +1,6 @@
 
 # install
-```
+```bash
 $ sudo apt update
 $ sudo apt install -y software-properties-common
 $ sudo add-apt-repository ppa:deadsnakes/ppa
@@ -13,14 +13,14 @@ $ sudo apt install -y python3-pip
 ```
 
 # version
-```
+```bash
 $ python -V
 $ pip3 -V
 ```
 
 # swtich version
 ## Search for python path
-```
+```bash
 $ which python3.9
 /usr/bin/python3.9
 
@@ -32,25 +32,25 @@ $ which python3.11
 ```
 
 ## setting for alternatives
-```
+```bash
 sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python3.9 1
 sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python3.10 2
 sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python3.11 3
 ```
 
 ## swtich ptyhon version
-```
+```bash
 sudo update-alternatives --config python
 ```
 
 # run
 ## case1
-```
+```bash
 $ python filename.py
 ```
 
 ## case2
-```
+```bash
 $ python3.10 filename.py
 ```
 
