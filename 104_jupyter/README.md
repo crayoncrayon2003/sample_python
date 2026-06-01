@@ -48,27 +48,48 @@ jupyter notebook --version
 jupyter kernelspec list
 ```
 
-# VS Code Stting
-## Install Extensions
+# 3. Font
+## 3.1. IPA fonts (Gothic and Mincho)
+```bash
+sudo apt install fonts-ipafont
+```
+
+## 3.2. IPAex fonts (IPA Gothic / IPA P Gothic - legacy IPA fonts)
+```bash
+sudo apt install fonts-ipaexfont
+```
+
+## 3.3. IPAex fonts (IPA Gothic / IPA P Gothic - improved version of IPA fonts)
+```bash
+sudo apt install fonts-ipaexfont-gothic
+```
+
+## 3.4. Noto CJK (Chinese, Japanese, Korean support)
+```bash
+sudo apt install fonts-noto-cjk
+```
+
+# 4. VS Code Stting
+## 4.1. Install Extensions
 Side Menu -> Extensions -> Search and Installation follow
 * Python
 * Jupyter
 
-## Activate Virtual Environment
+## 4.2. Activate Virtual Environment
 ```
 push   : Ctrl + Shift + p
 input  : Python: Select Interpreter
 select : env (Virtual Environment)
 ```
 
-## Create Notebook
-### case1
+## 4.3. Create Notebook
+### 4.3.1. case1
 ```
 push   : Ctrl + Shift + p
 input  : jupyter: Create Interactive Window
 ```
 
-### case2
+### 4.3.2. case2
 ```
 Create New File *.ipynb
 ```
