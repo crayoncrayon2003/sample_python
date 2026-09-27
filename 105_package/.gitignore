@@ -1,0 +1,10 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Package build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg

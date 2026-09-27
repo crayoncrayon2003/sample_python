@@ -1,0 +1,2 @@
+jmespath==1.1.0
+jsonpath-ng==1.8.0

@@ -1,6 +1,9 @@
-from pydantic import BaseModel, ValidationError, Field
-from pydantic.class_validators import validator
-from typing import Optional
+from pydantic import (
+    BaseModel,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+)
 
 class UserModel(BaseModel):
     id: int
@@ -9,23 +12,30 @@ class UserModel(BaseModel):
     password1: str
     password2: str
 
-    @validator('name')
-    def name_must_contain_space(cls, v):
-        if ' ' not in v:
+    @field_validator("name")
+    @classmethod
+    def name_must_contain_space(cls, value: str) -> str:
+        if ' ' not in value:
             raise ValueError('must contain a space')
-        return v.title()
+        return value.title()
 
-    @validator('age')
-    def age_must_greater_than_zero(cls, v):
-        if v < 0:
+    @field_validator("age")
+    @classmethod
+    def age_must_greater_than_zero(cls, value: int):
+        if value < 0:
             raise ValueError('age must be greater than zero')
-        return v
+        return value
 
-    @validator('password2')
-    def passwords_match(cls, v, values):
-        if 'password1' in values and v != values['password1']:
-            raise ValueError('passwords do not match')
-        return v
+    @field_validator("password2")
+    @classmethod
+    def passwords_match(cls, value: str, info: ValidationInfo,
+    ) -> str:
+        password1 = info.data.get("password1")
+
+        if password1 is not None and value != password1:
+            raise ValueError("passwords do not match")
+
+        return value
 
 def main():
     data = {

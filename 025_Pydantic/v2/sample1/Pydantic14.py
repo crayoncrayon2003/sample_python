@@ -1,74 +1,104 @@
-from pydantic import BaseModel, Field, ValidationError, validator
-from typing import Optional
+from typing import Annotated
+
 from bson import ObjectId
-import json
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    PlainSerializer,
+    ValidationError,
+    ValidationInfo,
+    WithJsonSchema,
+    field_validator,
+)
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
 
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError('Invalid objectid')
-        return ObjectId(v)
+def validate_object_id(value: str | ObjectId) -> ObjectId:
+    if isinstance(value, ObjectId):
+        return value
 
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    if not ObjectId.is_valid(value):
+        raise ValueError("invalid ObjectId")
+
+    return ObjectId(value)
+
+
+PyObjectId = Annotated[
+    ObjectId,
+    BeforeValidator(validate_object_id),
+    PlainSerializer(
+        lambda value: str(value),
+        return_type=str,
+        when_used="json",
+    ),
+    WithJsonSchema({"type": "string"}, mode="validation"),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
+]
+
 
 class UserModel(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias='_id')
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+    )
+
+    id: PyObjectId = Field(default_factory=ObjectId, alias="_id")
     name: str
     age: int
     password1: str
     password2: str
 
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    @field_validator("name")
+    @classmethod
+    def name_must_contain_space(cls, value: str) -> str:
+        if " " not in value:
+            raise ValueError("must contain a space")
+        return value.title()
 
-    @validator('name')
-    def name_must_contain_space(cls, v):
-        if ' ' not in v:
-            raise ValueError('must contain a space')
-        return v.title()
+    @field_validator("age")
+    @classmethod
+    def age_must_be_zero_or_greater(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("age must be zero or greater")
+        return value
 
-    @validator('age')
-    def age_must_greater_than_zero(cls, v):
-        if v < 0:
-            raise ValueError('age must be greater than zero')
-        return v
+    @field_validator("password2")
+    @classmethod
+    def passwords_match(
+        cls,
+        value: str,
+        info: ValidationInfo,
+    ) -> str:
+        password1 = info.data.get("password1")
 
-    @validator('password2')
-    def passwords_match(cls, v, values, **kwargs):
-        if 'password1' in values and v != values['password1']:
-            raise ValueError('passwords do not match')
-        return v
+        if password1 is not None and value != password1:
+            raise ValueError("passwords do not match")
+
+        return value
+
 
 def main():
     data = {
-        'name': 'FirstName FamilyName',
-        'age': 30,
-        'password1': 'pass',
-        'password2': 'pass',
+        "name": "FirstName FamilyName",
+        "age": 30,
+        "password1": "pass",
+        "password2": "pass",
     }
 
     try:
-        userA = UserModel(**data)
-        print(userA)
-    except ValidationError as e:
-        print(e.json())
+        user_a = UserModel.model_validate(data)
+    except ValidationError as error:
+        print(error.json(indent=2))
+        return
 
-    try:
-        json.dumps(userA)
-    except TypeError as e:
-        print(f"json.dumps is error. Therefore, id type is {type(userA.id)}")
+    python_data = user_a.model_dump(by_alias=True)
+    json_data = user_a.model_dump_json(by_alias=True)
 
-    print(f'value={userA} , type={type(userA)}')
-    print(f'value={userA.dict(by_alias=True)} , type={type(userA.dict(by_alias=True))}')
-    print(f'value={userA.json()} , type={type(userA.json())}')
+    print(f"value={user_a}, type={type(user_a)}")
+    print(f"value={python_data}, type={type(python_data)}")
+    print(f"value={json_data}, type={type(json_data)}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

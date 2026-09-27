@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
 from pydantic import BaseModel, Field
-from pydantic import BaseModel, Field
+from pydantic_core import core_schema
 import json
 from typing import Optional, List
 from bson.json_util import dumps, loads
@@ -9,29 +9,26 @@ from bson import ObjectId
 
 class PyObjectId(ObjectId):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        return core_schema.no_info_plain_validator_function(
+            cls.validate,
+            serialization=core_schema.to_string_ser_schema(when_used='json'),
+        )
 
     @classmethod
     def validate(cls, v):
-        if not ObjectId.is_valid(v):
+        if not isinstance(v, (str, ObjectId)) or not ObjectId.is_valid(v):
             raise ValueError('Invalid objectid')
         return ObjectId(v)
 
     @classmethod
-    def __get_pydantic_json_schema__(cls, schema: dict) -> None:
-        schema.update({"type": "string"})
+    def __get_pydantic_json_schema__(cls, schema, handler):
+        return {'type': 'string'}
 
 class UserModel(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias='_id')
     name: str
     age : int
-
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ObjectId: str
-        }
 
 # Custom encoder
 class JSONEncoder(json.JSONEncoder):

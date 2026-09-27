@@ -1,8 +1,8 @@
 from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
 import time
 import json
+
 
 class HTTPHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -18,10 +18,11 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
         body = {
             "temperature": 10,
-            "humidity"   : 20
+            "humidity": 20
         }
         print(body)
-        self.wfile.write( json.dumps(body).encode('utf-8') )
+        self.wfile.write(json.dumps(body).encode('utf-8'))
+
 
 if __name__ == "__main__":
     HOST = 'localhost'

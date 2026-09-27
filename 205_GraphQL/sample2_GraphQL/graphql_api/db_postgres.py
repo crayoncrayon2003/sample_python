@@ -1,7 +1,7 @@
 import psycopg2
 import os
 
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "0.0.0.0")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "testdb")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "user")

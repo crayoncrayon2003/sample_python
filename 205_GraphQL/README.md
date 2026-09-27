@@ -1,9 +1,11 @@
 # Creating Virtual Environment
+
 ```
 $ python3.12 -m venv env
 ```
 
 # Activate Virtual Environment
+
 ```
 $ source env/bin/activate
 (env) $ pip install --upgrade pip setuptools
@@ -11,20 +13,25 @@ $ source env/bin/activate
 ```
 
 # Test REST-API
+
 ## Run Backend Environment
+
 ```
 cd sample1_REST_API
 docker compose up -d
 ```
 
 ## Run REST-API
+
 ```
 cd rest_api
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ## Call REST-API
+
 ### Set postgres
+
 ```
 curl -X POST http://localhost:8000/postgres \
 -H "Content-Type: application/json" \
@@ -35,11 +42,13 @@ curl -X POST http://localhost:8000/postgres \
 ```
 
 ### Get postgres
+
 ```
 curl http://localhost:8000/postgres
 ```
 
 ### Set mongo
+
 ```
 curl -X POST http://localhost:8000/mongo \
 -H "Content-Type: application/json" \
@@ -50,11 +59,13 @@ curl -X POST http://localhost:8000/mongo \
 ```
 
 ### Get mongo
+
 ```
 curl http://localhost:8000/mongo
 ```
 
 ### Set REST-API
+
 ```
 curl -X POST http://localhost:8000/fixed \
 -H "Content-Type: application/json" \
@@ -62,30 +73,35 @@ curl -X POST http://localhost:8000/fixed \
 ```
 
 ### Get REST-API
+
 ```
 curl http://localhost:8000/fixed/greeting
 ```
 
 ### GET summary
+
 ```
 curl -X GET http://localhost:8000/summary
 ```
 
-
 # Test GraphQL-API
+
 ## Run Backend Environment
+
 ```
 cd sample2_GraphQL
 docker compose up -d
 ```
 
 ## Run GraphQL-API
+
 ```
 cd graphql_api
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ## Call REST-API
+
 ```
 curl -X POST http://localhost:8000/graphql \
   -H "Content-Type: application/json" \

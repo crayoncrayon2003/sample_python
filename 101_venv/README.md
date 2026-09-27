@@ -1,9 +1,11 @@
 # Creating Virtual Environment
+
 ```
 $ python -m venv env
 ```
 
 # Activate Virtual Environment
+
 ```
 $ source env/bin/activate
 (env) $ pip install --upgrade pip setuptools
@@ -13,11 +15,13 @@ $ source env/bin/activate
 ```
 
 # Deactivate Virtual Environment
+
 ```
 (env) $ deactivate
 ```
 
 # Remove Virtual Environment
+
 ```
 $ rm -rf env
 ```

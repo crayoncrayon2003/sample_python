@@ -1,6 +1,6 @@
 import requests
 
-FIXED_API_URL = "http://0.0.0.0:9000"
+FIXED_API_URL = "http://127.0.0.1:19000"
 
 def set_fixed_data(key: str, value):
     """

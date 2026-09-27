@@ -80,7 +80,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 if __name__ == "__main__":
-    HOST = '192.168.0.26'
+    HOST = '127.0.0.1'
     PORT = 8080
     print('http://{}:{}'.format(HOST, PORT))
 

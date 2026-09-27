@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 import os
 
-MONGO_HOST = os.getenv("MONGO_HOST", "0.0.0.0")
+MONGO_HOST = os.getenv("MONGO_HOST", "127.0.0.1")
 MONGO_PORT = int(os.getenv("MONGO_PORT", "27017"))
 
 def get_mongo_data():

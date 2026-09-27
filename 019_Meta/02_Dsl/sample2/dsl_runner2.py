@@ -26,7 +26,7 @@ def main():
 
     with open(FILE) as yaml_file:
         # load 'hello2.yml'
-        dsl = yaml.load(yaml_file)
+        dsl = yaml.safe_load(yaml_file)
         # print 'hello1.yml'
         print(dsl)
 

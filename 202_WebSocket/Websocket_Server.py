@@ -65,7 +65,7 @@ class Websocket_Server(threading.Thread):
         self.server.send_message_to_all(json.dumps(data))
 
 def main():
-    ws_server = Websocket_Server("172.28.164.85", 8181)
+    ws_server = Websocket_Server("127.0.0.1", 8181)
     ws_server.start()
 
 if __name__ == '__main__':

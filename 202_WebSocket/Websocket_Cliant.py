@@ -68,7 +68,7 @@ class Websocket_Client():
         self.client.send(json.dumps(data))
 
 def main():
-    ws_client = Websocket_Client("172.28.164.85", 8181)
+    ws_client = Websocket_Client("127.0.0.1", 8181)
     ws_client.run_forever()
 
 if __name__ == '__main__':

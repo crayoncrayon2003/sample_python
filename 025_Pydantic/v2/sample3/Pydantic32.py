@@ -4,7 +4,7 @@ import os
 import csv
 from pathlib import Path
 from typing import Any, Dict, List
-from datamodel_code_generator import generate, PythonVersion, InputFileType
+from datamodel_code_generator import generate, PythonVersion, InputFileType, DataModelType
 import importlib.util
 
 
@@ -49,6 +49,7 @@ def main():
     generate(
         input_=json.dumps(input_schema),
         input_file_type=InputFileType.JsonSchema,
+        output_model_type=DataModelType.PydanticV2BaseModel,
         target_python_version=PythonVersion.PY_312,
         output=Path(input_model_file)
     )
