@@ -1,5 +1,5 @@
 from taskflow import engines, task
-from taskflow.patterns import unordered_flow
+from taskflow.patterns import graph_flow
 
 class Task1(task.Task):
     def execute(self):
@@ -20,17 +20,17 @@ class Task3(task.Task):
 
 def main():
     # create task
-    task1 = Task1()
-    task2 = Task2()
+    task1 = Task1(provides="data1")
+    task2 = Task2(provides="data2")
     task3 = Task3()
 
     # create workflow
-    workflow = unordered_flow.Flow("ParallelFlow")
+    # Task3 の引数 data1, data2 から依存関係を自動構築する
+    workflow = graph_flow.Flow("ParallelFlow")
     workflow.add(task1, task2, task3)
-    task3.requires(task1, task2)
 
     # load workflow
-    engine = engines.load(workflow)
+    engine = engines.load(workflow, engine="parallel", executor="threads")
 
     # run
     engine.run()
