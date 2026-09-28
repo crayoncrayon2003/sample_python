@@ -1,0 +1,24 @@
+# Jupyter kernel
+
+ipykernel==6.29.5
+jupyterlab==4.2.5
+
+# Core scientific stack
+
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.13.1
+
+# Visualization
+
+matplotlib==3.9.0
+seaborn==0.13.2
+
+# Machine learning (最低限)
+
+scikit-learn==1.5.1
+
+# Optional but useful
+
+statsmodels==0.14.2
+tqdm==4.66.4
